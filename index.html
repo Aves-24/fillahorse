@@ -19,6 +19,21 @@
     gap: 4px;
   }
 
+  /* ── Camera feed (real-world AR background) ── */
+  #camera {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  /* Logo text needs shadow to stay readable over any camera scene */
+  .url-top, .stage, .tagline { position: relative; }
+
+  .logo-img { filter: drop-shadow(0 2px 12px rgba(0,0,0,.55)); }
+  .url-top a { text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+  .tagline   { text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+
   /* ── URL link (right above logo) ── */
   .url-top {
     z-index: 10; text-align: center;
@@ -76,14 +91,36 @@
   .tagline {
     z-index: 1;
     text-align: center;
-    color: rgba(255,255,255,.85);
+    color: rgba(255,255,255,.92);
     font-size: clamp(13px, 3.4vw, 20px);
     letter-spacing: .04em;
     font-style: italic;
   }
+
+  /* ── Start screen (camera permission) ── */
+  #start {
+    position: fixed; inset: 0; z-index: 30;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #000; gap: 26px; text-align: center; padding: 32px;
+  }
+  #start .s-logo {
+    width: min(60vw, 240px);
+  }
+  #start .s-logo svg { width: 100%; height: auto; }
+  #startBtn {
+    background: #fff; color: #000; border: none; border-radius: 50px;
+    padding: 15px 38px; font-size: clamp(16px, 4vw, 21px); font-weight: bold;
+    letter-spacing: .04em; cursor: pointer; font-family: Georgia, serif;
+    transition: .15s;
+  }
+  #startBtn:active { transform: scale(.96); }
+  #err { color: #ff8877; font-size: 13px; display: none; max-width: 280px; }
 </style>
 </head>
 <body>
+
+<video id="camera" autoplay playsinline muted></video>
 
 <div class="url-top">
   <a href="https://www.fillahorse.de" target="_blank" rel="noopener">www.fillahorse.de</a>
@@ -124,7 +161,42 @@
 
 <div class="tagline">Natürliche Pferdepflege. Echte Wirkung.</div>
 
+<!-- Start screen: camera permission (required by browsers) -->
+<div id="start">
+  <div style="color:#fff;font-size:clamp(24px,7vw,44px);font-weight:bold;letter-spacing:.06em;">FILLAHORSE</div>
+  <p style="color:rgba(255,255,255,.6);font-size:clamp(14px,3.6vw,18px);max-width:300px;line-height:1.6;">
+    Richte die Kamera auf deine Umgebung und sieh das Logo in Augmented Reality.
+  </p>
+  <button id="startBtn">▶ AR starten</button>
+  <div id="err"></div>
+</div>
+
 <script>
+// ── Camera (AR background) ───────────────────────────
+document.getElementById('startBtn').addEventListener('click', async () => {
+  const err = document.getElementById('err');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: {ideal:1280}, height: {ideal:720} },
+      audio: false,
+    });
+    const vid = document.getElementById('camera');
+    vid.srcObject = stream;
+    await vid.play();
+    // Ask for gyroscope permission on iOS 13+
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try { await DeviceOrientationEvent.requestPermission(); } catch(_) {}
+    }
+    document.getElementById('start').style.display = 'none';
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = e.name === 'NotAllowedError'
+      ? 'Kein Kamerazugriff. Bitte in den Einstellungen erlauben.'
+      : 'Kamerafehler: ' + e.message;
+  }
+});
+
 // ── 3D tilt on mouse / device orientation ───────────
 const card  = document.getElementById('card');
 const stage = document.getElementById('stage');
