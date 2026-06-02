@@ -97,6 +97,112 @@
     font-style: italic;
   }
 
+  /* ── AR panorama world ── */
+  .world {
+    position: fixed; top: 0; left: -100vw;
+    width: 300vw; height: 100dvh;
+    display: flex; z-index: 1;
+    will-change: transform;
+  }
+  .panel {
+    width: 100vw; height: 100dvh; flex: 0 0 100vw;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 64px 18px;
+  }
+  .panel.center { gap: 4px; }
+
+  .side-label {
+    color: #fff; font-size: clamp(18px, 5vw, 28px); font-weight: bold;
+    letter-spacing: .1em; text-transform: uppercase;
+    text-shadow: 0 2px 12px rgba(0,0,0,.85);
+    margin-bottom: 4px;
+  }
+  .products {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    justify-content: center; align-items: stretch;
+    width: 100%; max-width: 460px;
+  }
+  .product-card {
+    width: min(42vw, 195px);
+    background: rgba(18,18,18,.42);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 18px; padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.35);
+  }
+  .pc-img {
+    width: 100%; aspect-ratio: 1/1; border-radius: 12px;
+    background: #fff center/cover no-repeat;
+  }
+  .pc-name {
+    color: #fff; font-size: clamp(13px, 3.4vw, 16px); font-weight: bold;
+    text-align: center; line-height: 1.25;
+    text-shadow: 0 1px 6px rgba(0,0,0,.6);
+  }
+  .pc-btn {
+    background: rgba(255,255,255,.92); color: #000; border: none;
+    border-radius: 50px; padding: 9px 0; font-family: Georgia, serif;
+    font-size: 14px; font-weight: bold; cursor: pointer; transition: .15s;
+  }
+  .pc-btn:active { transform: scale(.96); }
+
+  /* ── Product description modal ── */
+  #modal {
+    position: fixed; inset: 0; z-index: 40;
+    display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(0,0,0,0); backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    pointer-events: none; transition: background .3s, backdrop-filter .3s;
+  }
+  #modal.open {
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+  .modal-card {
+    width: 100%; max-width: 440px;
+    background: #111; border-radius: 26px 26px 0 0;
+    padding: 18px 22px 32px;
+    transform: translateY(100%);
+    transition: transform .38s cubic-bezier(.2,.85,.25,1);
+    display: flex; flex-direction: column; gap: 14px; align-items: center;
+    box-shadow: 0 -10px 40px rgba(0,0,0,.5);
+    max-height: 88dvh; overflow-y: auto;
+  }
+  #modal.open .modal-card { transform: translateY(0); }
+  .modal-close {
+    align-self: flex-end; background: none; border: none; color: #888;
+    font-size: 26px; line-height: 1; cursor: pointer; padding: 0;
+  }
+  .modal-img {
+    width: 130px; height: 130px; border-radius: 18px;
+    background: #fff center/cover no-repeat;
+  }
+  .modal-name { color: #fff; font-size: 23px; text-align: center; }
+  .modal-desc {
+    color: rgba(255,255,255,.82); font-size: 15px; line-height: 1.6;
+    text-align: center; font-style: normal;
+  }
+  .modal-link {
+    margin-top: 6px; background: #fff; color: #000; text-decoration: none;
+    padding: 13px 32px; border-radius: 50px; font-weight: bold; font-size: 16px;
+    transition: .15s;
+  }
+  .modal-link:active { transform: scale(.97); }
+
+  /* ── Look-around hint ── */
+  .hint {
+    position: fixed; bottom: 16px; left: 0; right: 0; z-index: 5;
+    text-align: center; color: rgba(255,255,255,.85);
+    font-size: 13px; letter-spacing: .08em;
+    text-shadow: 0 2px 8px rgba(0,0,0,.85);
+    animation: hintPulse 2.4s ease-in-out infinite;
+    pointer-events: none; transition: opacity .5s;
+  }
+  @keyframes hintPulse { 0%,100% { opacity:.45; } 50% { opacity:1; } }
+
   /* ── Start screen (camera permission) ── */
   #start {
     position: fixed; inset: 0; z-index: 30;
@@ -121,6 +227,17 @@
 <body>
 
 <video id="camera" autoplay playsinline muted></video>
+
+<div class="world" id="world">
+
+<!-- LEFT: Bestseller -->
+<section class="panel side left">
+  <div class="side-label">★ Bestseller</div>
+  <div class="products" id="leftProducts" data-cat="bestseller"></div>
+</section>
+
+<!-- CENTER: Logo -->
+<section class="panel center">
 
 <div class="url-top">
   <a href="https://www.fillahorse.de" target="_blank" rel="noopener">www.fillahorse.de</a>
@@ -161,11 +278,35 @@
 
 <div class="tagline">Natürliche Pferdepflege. Echte Wirkung.</div>
 
+</section><!-- /center -->
+
+<!-- RIGHT: Unsere Empfehlungen -->
+<section class="panel side right">
+  <div class="side-label">Unsere Empfehlungen</div>
+  <div class="products" id="rightProducts" data-cat="empfehlung"></div>
+</section>
+
+</div><!-- /world -->
+
+<!-- Product description modal -->
+<div id="modal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Schließen">✕</button>
+    <div class="modal-img" id="modalImg"></div>
+    <h3 class="modal-name" id="modalName"></h3>
+    <p class="modal-desc" id="modalDesc"></p>
+    <a class="modal-link" id="modalLink" target="_blank" rel="noopener">Zum Produkt →</a>
+  </div>
+</div>
+
+<!-- Look-around hint -->
+<div class="hint" id="hint">◀ Bewege dein Handy ▶</div>
+
 <!-- Start screen: camera permission (required by browsers) -->
 <div id="start">
   <div style="color:#fff;font-size:clamp(24px,7vw,44px);font-weight:bold;letter-spacing:.06em;">FILLAHORSE</div>
-  <p style="color:rgba(255,255,255,.6);font-size:clamp(14px,3.6vw,18px);max-width:300px;line-height:1.6;">
-    Richte die Kamera auf deine Umgebung und sieh das Logo in Augmented Reality.
+  <p style="color:rgba(255,255,255,.6);font-size:clamp(14px,3.6vw,18px);max-width:310px;line-height:1.6;">
+    Bewege dein Handy nach links und rechts, um unsere Produkte in Augmented Reality zu entdecken.
   </p>
   <button id="startBtn">▶ AR starten</button>
   <div id="err"></div>
@@ -240,6 +381,105 @@ window.addEventListener('deviceorientation', e => {
   tiltX += (targetX - tiltX) * .08;
   tiltY += (targetY - tiltY) * .08;
   card.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+})();
+
+
+// ═══════════════════════════════════════════════════════
+//  PRODUKTE — hier echte Daten eintragen
+//  (img: Bild-URL · name · desc: Beschreibung · link: Produktseite)
+// ═══════════════════════════════════════════════════════
+const PRODUCTS = {
+  bestseller: [
+    { name: 'Produkt 1', img: '', desc: 'Hier kommt die Produktbeschreibung. Natürliche Inhaltsstoffe für die optimale Pflege deines Pferdes.', link: 'https://www.fillahorse.de' },
+    { name: 'Produkt 2', img: '', desc: 'Hier kommt die Produktbeschreibung. Bewährte Rezeptur, von Tierärzten empfohlen.', link: 'https://www.fillahorse.de' },
+  ],
+  empfehlung: [
+    { name: 'Produkt 3', img: '', desc: 'Hier kommt die Produktbeschreibung. Ideal zur täglichen Anwendung.', link: 'https://www.fillahorse.de' },
+    { name: 'Produkt 4', img: '', desc: 'Hier kommt die Produktbeschreibung. Premium-Qualität für anspruchsvolle Pferdebesitzer.', link: 'https://www.fillahorse.de' },
+  ],
+};
+
+// ── Render product cards ──
+function renderProducts(cat, container) {
+  container.innerHTML = PRODUCTS[cat].map((p, i) => `
+    <div class="product-card">
+      <div class="pc-img" style="background-image:url('${p.img}')"></div>
+      <div class="pc-name">${p.name}</div>
+      <button class="pc-btn" data-cat="${cat}" data-i="${i}">Beschreibung</button>
+    </div>`).join('');
+}
+renderProducts('bestseller', document.getElementById('leftProducts'));
+renderProducts('empfehlung',  document.getElementById('rightProducts'));
+
+// ── Modal ──
+const modal     = document.getElementById('modal');
+const modalImg  = document.getElementById('modalImg');
+const modalName = document.getElementById('modalName');
+const modalDesc = document.getElementById('modalDesc');
+const modalLink = document.getElementById('modalLink');
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.pc-btn');
+  if (!btn) return;
+  const p = PRODUCTS[btn.dataset.cat][+btn.dataset.i];
+  modalImg.style.backgroundImage = `url('${p.img}')`;
+  modalName.textContent = p.name;
+  modalDesc.textContent = p.desc;
+  modalLink.href = p.link;
+  modal.classList.add('open');
+});
+document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('open'));
+modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+// ── Panorama navigation (tilt + swipe) ──
+const world  = document.getElementById('world');
+const hint   = document.getElementById('hint');
+const MAXG    = 22;          // tilt degrees for full swing
+let navTarget = 0, navCur = 0;
+let navDrag = false, navStartTouch = 0, navStartX = 0, navLastTouch = 0, navMoved = false;
+let interacted = false;
+
+function clampN(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function markInteracted() {
+  if (!interacted) { interacted = true; hint.style.opacity = '0'; }
+}
+
+// Gyroscope: tilt phone left/right
+window.addEventListener('deviceorientation', e => {
+  if (e.gamma == null) return;
+  if (navDrag || performance.now() - navLastTouch < 1500) return;
+  navTarget = -clampN(e.gamma / MAXG, -1, 1) * 100;
+  if (Math.abs(navTarget) > 15) markInteracted();
+});
+
+// Pointer / touch swipe
+function navPointerStart(x) { navDrag = true; navMoved = false; navStartTouch = x; navStartX = navCur; }
+function navPointerMove(x) {
+  if (!navDrag) return;
+  const dx = (x - navStartTouch) / window.innerWidth * 100;
+  if (Math.abs(x - navStartTouch) > 8) { navMoved = true; markInteracted(); }
+  navTarget = clampN(navStartX + dx, -100, 100);
+  navLastTouch = performance.now();
+}
+function navPointerEnd() {
+  if (!navDrag) return;
+  navDrag = false; navLastTouch = performance.now();
+  navTarget = Math.round(navTarget / 100) * 100;   // snap to nearest panel
+}
+
+window.addEventListener('touchstart', e => navPointerStart(e.touches[0].clientX), { passive: true });
+window.addEventListener('touchmove',  e => { navPointerMove(e.touches[0].clientX); if (navMoved) e.preventDefault(); }, { passive: false });
+window.addEventListener('touchend', navPointerEnd);
+
+let navMouseDown = false;
+window.addEventListener('mousedown', e => { navMouseDown = true; navPointerStart(e.clientX); });
+window.addEventListener('mousemove', e => { if (navMouseDown) navPointerMove(e.clientX); });
+window.addEventListener('mouseup', () => { navMouseDown = false; navPointerEnd(); });
+
+(function navLoop() {
+  requestAnimationFrame(navLoop);
+  navCur += (navTarget - navCur) * 0.12;
+  world.style.transform = `translateX(${navCur}vw)`;
 })();
 </script>
 
