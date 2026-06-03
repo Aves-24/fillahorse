@@ -99,18 +99,26 @@
 
   /* ── AR panorama world ── */
   .world {
-    position: fixed; top: 0; left: -100vw;
-    width: 300vw; height: 100dvh;
+    position: fixed; top: 0; left: -70vw;
+    width: 240vw; height: 100dvh;
     display: flex; z-index: 1;
     will-change: transform;
   }
+  /* Side panels: 85vw — 15vw of each peeks into center view */
   .panel {
-    width: 100vw; height: 100dvh; flex: 0 0 100vw;
+    width: 85vw; height: 100dvh; flex: 0 0 85vw;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 16px; padding: 64px 18px;
+    gap: 16px; padding: 64px 10px;
   }
-  .panel.center { gap: 4px; }
+  /* Push products toward center so they peek into viewport */
+  .panel.left  { align-items: flex-end;   padding-right: 0; }
+  .panel.right { align-items: flex-start; padding-left:  0; }
+  /* Center panel: 70vw — stays centered in 100vw viewport */
+  .panel.center {
+    width: 70vw; flex: 0 0 70vw;
+    gap: 4px; padding: 0;
+  }
 
   .side-label {
     color: #fff; font-size: clamp(18px, 5vw, 28px); font-weight: bold;
@@ -119,12 +127,12 @@
     margin-bottom: 4px;
   }
   .products {
-    display: flex; gap: 14px; flex-wrap: wrap;
-    justify-content: center; align-items: stretch;
-    width: 100%; max-width: 460px;
+    display: flex; gap: 14px; flex-direction: column;
+    align-items: stretch;
+    width: min(62vw, 220px);
   }
   .product-card {
-    width: min(42vw, 195px);
+    width: 100%;
     background: rgba(18,18,18,.42);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     border: 1px solid rgba(255,255,255,.18);
@@ -194,7 +202,7 @@
 
   /* ── Look-around hint ── */
   .hint {
-    position: fixed; bottom: 16px; left: 0; right: 0; z-index: 5;
+    position: fixed; bottom: 36%; left: 0; right: 0; z-index: 5;
     text-align: center; color: rgba(255,255,255,.85);
     font-size: 13px; letter-spacing: .08em;
     text-shadow: 0 2px 8px rgba(0,0,0,.85);
@@ -478,23 +486,23 @@ function markInteracted() {
 window.addEventListener('deviceorientation', e => {
   if (e.gamma == null) return;
   if (navDrag || performance.now() - navLastTouch < 1500) return;
-  navTarget = clampN(e.gamma / MAXG, -1, 1) * 100;
-  if (Math.abs(navTarget) > 15) markInteracted();
+  navTarget = clampN(e.gamma / MAXG, -1, 1) * 70;
+  if (Math.abs(navTarget) > 10) markInteracted();
 });
 
 // Pointer / touch swipe
 function navPointerStart(x) { navDrag = true; navMoved = false; navStartTouch = x; navStartX = navCur; }
 function navPointerMove(x) {
   if (!navDrag) return;
-  const dx = (x - navStartTouch) / window.innerWidth * 100;
+  const dx = (x - navStartTouch) / window.innerWidth * 70;
   if (Math.abs(x - navStartTouch) > 8) { navMoved = true; markInteracted(); }
-  navTarget = clampN(navStartX + dx, -100, 100);
+  navTarget = clampN(navStartX + dx, -70, 70);
   navLastTouch = performance.now();
 }
 function navPointerEnd() {
   if (!navDrag) return;
   navDrag = false; navLastTouch = performance.now();
-  navTarget = Math.round(navTarget / 100) * 100;   // snap to nearest panel
+  navTarget = Math.round(navTarget / 70) * 70;   // snap to nearest panel
 }
 
 window.addEventListener('touchstart', e => navPointerStart(e.touches[0].clientX), { passive: true });
