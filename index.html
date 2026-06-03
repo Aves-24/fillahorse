@@ -624,19 +624,45 @@ window.addEventListener('deviceorientation', e => {
   if (Math.abs(navTarget) > 10) markInteracted();
 });
 
-// Pointer / touch swipe
-function navPointerStart(x) { navDrag = true; navMoved = false; navStartTouch = x; navStartX = navCur; }
+// Pointer / touch swipe — z velocity i momentum
+let navVelocity = 0;
+let navLastX = 0, navLastTime = 0;
+
+function navPointerStart(x) {
+  navDrag = true; navMoved = false;
+  navStartTouch = x; navStartX = navCur;
+  navVelocity = 0; navLastX = x; navLastTime = performance.now();
+}
 function navPointerMove(x) {
   if (!navDrag) return;
-  const dx = (x - navStartTouch) / window.innerWidth * 70;
-  if (Math.abs(x - navStartTouch) > 8) { navMoved = true; markInteracted(); }
+  const now = performance.now();
+  const dt = now - navLastTime || 1;
+  navVelocity = (x - navLastX) / dt * 16; // px/frame
+  navLastX = x; navLastTime = now;
+  const dx = (x - navStartTouch) / window.innerWidth * 140;
+  if (Math.abs(x - navStartTouch) > 6) { navMoved = true; markInteracted(); }
   navTarget = clampN(navStartX + dx, -70, 70);
   navLastTouch = performance.now();
 }
 function navPointerEnd() {
   if (!navDrag) return;
   navDrag = false; navLastTouch = performance.now();
-  navTarget = Math.round(navTarget / 70) * 70;   // snap to nearest panel
+  // Flick: jeśli prędkość wystarczająca — przeskocz do następnego panelu
+  const velVw = navVelocity / window.innerWidth * 100;
+  const PANELS = [-70, 0, 70];
+  let target;
+  if (Math.abs(velVw) > 1.2) {
+    // snap w kierunku swipe'a
+    const dir = velVw > 0 ? 1 : -1;
+    const cur = PANELS.reduce((a, b) => Math.abs(b - navCur) < Math.abs(a - navCur) ? b : a);
+    const idx = PANELS.indexOf(cur);
+    target = PANELS[clampN(idx - dir, 0, 2)];
+  } else {
+    // snap do najbliższego panelu
+    target = PANELS.reduce((a, b) => Math.abs(b - navTarget) < Math.abs(a - navTarget) ? b : a);
+  }
+  navTarget = target;
+  navVelocity = 0;
 }
 
 window.addEventListener('touchstart', e => navPointerStart(e.touches[0].clientX), { passive: true });
@@ -652,9 +678,8 @@ const stableBg = document.getElementById('stableBg');
 
 (function navLoop() {
   requestAnimationFrame(navLoop);
-  navCur += (navTarget - navCur) * 0.12;
+  navCur += (navTarget - navCur) * 0.09; // trochę płynniejsze
   world.style.transform = `translateX(${navCur}vw)`;
-  // Tło przesuwa się wolniej niż panele — efekt głębi
   stableBg.style.transform = `translateX(${navCur * 0.25}vw)`;
 })();
 
