@@ -448,7 +448,7 @@ function markInteracted() {
 window.addEventListener('deviceorientation', e => {
   if (e.gamma == null) return;
   if (navDrag || performance.now() - navLastTouch < 1500) return;
-  navTarget = -clampN(e.gamma / MAXG, -1, 1) * 100;
+  navTarget = clampN(e.gamma / MAXG, -1, 1) * 100;
   if (Math.abs(navTarget) > 15) markInteracted();
 });
 
