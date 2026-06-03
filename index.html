@@ -256,36 +256,54 @@
   #startBtn:active { transform: scale(.96); }
   #err { color: #ff8877; font-size: 13px; display: none; max-width: 280px; }
 
-  /* ── Video modal ── */
+  /* ── Video thumbnail card (w panelu) ── */
+  .video-thumb-wrap {
+    width: min(34vw, 150px);
+    position: relative; border-radius: 18px; overflow: hidden;
+    cursor: pointer; flex-shrink: 0;
+    box-shadow: 0 8px 30px rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.18);
+  }
+  .video-thumb-wrap video {
+    width: 100%; aspect-ratio: 9/16; object-fit: cover;
+    display: block; pointer-events: none;
+  }
+  .video-play-btn {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.28);
+  }
+  .video-play-btn svg { width: 44px; height: 44px; filter: drop-shadow(0 2px 8px rgba(0,0,0,.7)); }
+
+  /* ── Video fullscreen modal ── */
   #videoModal {
     position: fixed; inset: 0; z-index: 45;
-    display: flex; align-items: flex-end; justify-content: center;
-    background: rgba(0,0,0,0); backdrop-filter: blur(0);
-    -webkit-backdrop-filter: blur(0);
-    pointer-events: none; transition: background .3s, backdrop-filter .3s;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0);
+    pointer-events: none; transition: background .3s;
   }
   #videoModal.open {
-    background: rgba(0,0,0,.7);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    background: rgba(0,0,0,.55);
     pointer-events: auto;
   }
-  .video-card {
-    width: 100%; max-width: 480px;
-    background: #111; border-radius: 26px 26px 0 0;
-    padding: 14px 14px 0;
-    transform: translateY(100%);
-    transition: transform .38s cubic-bezier(.2,.85,.25,1);
-    display: flex; flex-direction: column; gap: 10px;
-    box-shadow: 0 -10px 40px rgba(0,0,0,.6);
+  .video-fs-wrap {
+    width: 92vw; max-width: 420px;
+    border-radius: 22px; overflow: hidden; position: relative;
+    transform: scale(.88); opacity: 0;
+    transition: transform .35s cubic-bezier(.2,.85,.25,1), opacity .35s;
+    box-shadow: 0 20px 60px rgba(0,0,0,.7);
   }
-  #videoModal.open .video-card { transform: translateY(0); }
-  .video-close {
-    align-self: flex-end; background: none; border: none; color: #888;
-    font-size: 26px; line-height: 1; cursor: pointer; padding: 0;
+  #videoModal.open .video-fs-wrap { transform: scale(1); opacity: 1; }
+  .video-fs-wrap video {
+    width: 100%; display: block; max-height: 82dvh; object-fit: contain;
+    background: #000;
   }
-  .video-card video {
-    width: 100%; border-radius: 16px 16px 0 0;
-    display: block; max-height: 60dvh; object-fit: cover;
+  .video-fs-close {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,.55); border: none; color: #fff;
+    font-size: 22px; line-height: 1; width: 36px; height: 36px;
+    border-radius: 50%; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
   }
 
   /* ── Legal footer ── */
@@ -318,6 +336,17 @@
 <section class="panel side left">
   <div class="side-label">★ Bestseller</div>
   <div class="products" id="leftProducts" data-cat="bestseller"></div>
+  <div class="products" id="videoThumbRow" style="margin-top:6px;">
+    <div class="video-thumb-wrap" id="videoThumb">
+      <video src="VID-20260319-WA0012.mp4" muted playsinline preload="metadata" id="videoThumbVid"></video>
+      <div class="video-play-btn">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.9)"/>
+          <polygon points="10,8 18,12 10,16" fill="#000"/>
+        </svg>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- CENTER: Logo -->
@@ -383,11 +412,11 @@
   </div>
 </div>
 
-<!-- Video modal (lewy panel + pochylenie w dół) -->
+<!-- Video fullscreen modal -->
 <div id="videoModal">
-  <div class="video-card">
-    <button class="video-close" id="videoClose">✕</button>
-    <video id="videoPlayer" src="VID-20260319-WA0012.mp4" muted playsinline loop></video>
+  <div class="video-fs-wrap">
+    <video id="videoPlayer" src="VID-20260319-WA0012.mp4" playsinline loop></video>
+    <button class="video-fs-close" id="videoClose">✕</button>
   </div>
 </div>
 
@@ -594,50 +623,33 @@ window.addEventListener('mouseup', () => { navMouseDown = false; navPointerEnd()
   world.style.transform = `translateX(${navCur}vw)`;
 })();
 
-// ── Video modal: lewy panel + pochylenie w dół ──
+// ── Video modal: miniaturka → fullscreen ──
 const videoModal  = document.getElementById('videoModal');
 const videoPlayer = document.getElementById('videoPlayer');
 const videoClose  = document.getElementById('videoClose');
+const videoThumb  = document.getElementById('videoThumb');
+const videoThumbVid = document.getElementById('videoThumbVid');
 
-let videoOpen = false;
-let videoManuallyClosed = false;
-const BETA_OPEN  = 55;  // stopni — pochylenie w dół otwiera
-const BETA_CLOSE = 35;  // stopni — wyprostowanie zamyka
+// Pokaż pierwszą klatkę miniatury
+videoThumbVid.addEventListener('loadedmetadata', () => {
+  videoThumbVid.currentTime = 0.1;
+});
 
 function openVideo() {
-  if (videoOpen) return;
-  videoOpen = true;
-  videoManuallyClosed = false;
   videoModal.classList.add('open');
   videoPlayer.currentTime = 0;
   videoPlayer.play().catch(() => {});
 }
 
 function closeVideo() {
-  if (!videoOpen) return;
-  videoOpen = false;
   videoModal.classList.remove('open');
   videoPlayer.pause();
 }
 
-videoClose.addEventListener('click', () => {
-  videoManuallyClosed = true;
-  closeVideo();
-});
+videoThumb.addEventListener('click', openVideo);
+videoClose.addEventListener('click', closeVideo);
 videoModal.addEventListener('click', e => {
-  if (e.target === videoModal) { videoManuallyClosed = true; closeVideo(); }
-});
-
-window.addEventListener('deviceorientation', e => {
-  if (e.beta == null) return;
-  const onLeftPanel = navCur > 35; // lewy panel widoczny
-  if (onLeftPanel && e.beta > BETA_OPEN && !videoManuallyClosed) {
-    openVideo();
-  } else if (videoOpen && (!onLeftPanel || e.beta < BETA_CLOSE)) {
-    closeVideo();
-  }
-  // reset flagi gdy użytkownik wyprostuje lub odejdzie od panelu
-  if (e.beta < BETA_CLOSE || !onLeftPanel) videoManuallyClosed = false;
+  if (e.target === videoModal) closeVideo();
 });
 </script>
 
