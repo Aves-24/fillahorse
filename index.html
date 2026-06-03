@@ -46,25 +46,11 @@
   }
   @keyframes dustFloat {
     0%   { transform: translateY(0) translateX(0);   opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: .6; }
+    10%  { opacity: .35; }
+    90%  { opacity: .2; }
     100% { transform: translateY(-110dvh) translateX(var(--dx)); opacity: 0; }
   }
 
-  /* ── Straw pieces ── */
-  #straw {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    height: 18vh; z-index: 1; pointer-events: none; overflow: hidden;
-  }
-  .straw-p {
-    position: absolute; bottom: var(--b);
-    width: var(--w); height: 3px;
-    background: #d4a843;
-    border-radius: 2px;
-    opacity: .15;
-    transform: rotate(var(--r));
-    transform-origin: center center;
-  }
 
   .url-top, .stage, .tagline { position: relative; }
   .logo-img { filter: drop-shadow(0 2px 12px rgba(0,0,0,.65)); }
@@ -367,7 +353,6 @@
 
 <div id="stableBg"></div>
 <div id="dust"></div>
-<div id="straw"></div>
 
 <div class="world" id="world">
 
@@ -502,7 +487,7 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     p.className = 'dust-p';
     const size = 2 + Math.random() * 4;
     const left = Math.random() * 100;
-    const duration = 8 + Math.random() * 14;
+    const duration = 22 + Math.random() * 30;
     const delay = -Math.random() * duration;
     const dx = (Math.random() - 0.5) * 80;
     p.style.cssText = `
@@ -671,22 +656,6 @@ const stableBg = document.getElementById('stableBg');
   world.style.transform = `translateX(${navCur}vw)`;
   // Tło przesuwa się wolniej niż panele — efekt głębi
   stableBg.style.transform = `translateX(${navCur * 0.25}vw)`;
-})();
-
-// ── Straw pieces ──────────────────────────────────────
-(function spawnStraw() {
-  const container = document.getElementById('straw');
-  const COUNT = 35;
-  for (let i = 0; i < COUNT; i++) {
-    const p = document.createElement('div');
-    p.className = 'straw-p';
-    const w = 10 + Math.random() * 27;
-    const left = Math.random() * 105;
-    const bottom = Math.random() * 16;
-    const rot = (Math.random() - 0.5) * 40;
-    p.style.cssText = `--w:${w}px; --b:${bottom}vh; --r:${rot}deg; left:${left}vw;`;
-    container.appendChild(p);
-  }
 })();
 
 // ── Video modal: miniaturka → fullscreen ──
