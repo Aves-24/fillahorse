@@ -51,6 +51,21 @@
     100% { transform: translateY(-110dvh) translateX(var(--dx)); opacity: 0; }
   }
 
+  /* ── Straw pieces ── */
+  #straw {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 18vh; z-index: 1; pointer-events: none; overflow: hidden;
+  }
+  .straw-p {
+    position: absolute; bottom: var(--b);
+    width: var(--w); height: 3px;
+    background: #d4a843;
+    border-radius: 2px;
+    opacity: .15;
+    transform: rotate(var(--r));
+    transform-origin: center center;
+  }
+
   .url-top, .stage, .tagline { position: relative; }
   .logo-img { filter: drop-shadow(0 2px 12px rgba(0,0,0,.65)); }
   .url-top a { text-shadow: 0 2px 10px rgba(0,0,0,.8); }
@@ -352,6 +367,7 @@
 
 <div id="stableBg"></div>
 <div id="dust"></div>
+<div id="straw"></div>
 
 <div class="world" id="world">
 
@@ -655,6 +671,22 @@ const stableBg = document.getElementById('stableBg');
   world.style.transform = `translateX(${navCur}vw)`;
   // Tło przesuwa się wolniej niż panele — efekt głębi
   stableBg.style.transform = `translateX(${navCur * 0.25}vw)`;
+})();
+
+// ── Straw pieces ──────────────────────────────────────
+(function spawnStraw() {
+  const container = document.getElementById('straw');
+  const COUNT = 35;
+  for (let i = 0; i < COUNT; i++) {
+    const p = document.createElement('div');
+    p.className = 'straw-p';
+    const w = 30 + Math.random() * 80;
+    const left = Math.random() * 105;
+    const bottom = Math.random() * 16;
+    const rot = (Math.random() - 0.5) * 40;
+    p.style.cssText = `--w:${w}px; --b:${bottom}vh; --r:${rot}deg; left:${left}vw;`;
+    container.appendChild(p);
+  }
 })();
 
 // ── Video modal: miniaturka → fullscreen ──
