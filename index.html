@@ -662,7 +662,7 @@ function navPointerEnd() {
     const dir = velVw > 0 ? 1 : -1;
     const cur = PANELS.reduce((a, b) => Math.abs(b - navCur) < Math.abs(a - navCur) ? b : a);
     const idx = PANELS.indexOf(cur);
-    target = PANELS[clampN(idx - dir, 0, 2)];
+    target = PANELS[clampN(idx + dir, 0, 2)];
   } else {
     // snap do najbliższego panelu
     target = PANELS.reduce((a, b) => Math.abs(b - navTarget) < Math.abs(a - navTarget) ? b : a);
