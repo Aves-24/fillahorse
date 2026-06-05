@@ -641,11 +641,11 @@ document.getElementById('videoThumbRowRight').innerHTML = shuffled.map(src => `
     ${playIcon}
   </div>`).join('');
 
-// Pokaż pierwszą klatkę miniatur
+// Pokaż klatkę z połowy filmu
 document.querySelectorAll('.video-thumb-wrap video').forEach(v => {
-  function seekThumb() { v.currentTime = 0.5; }
-  v.addEventListener('loadedmetadata', seekThumb);
-  v.addEventListener('canplay', seekThumb);
+  v.addEventListener('loadedmetadata', () => {
+    v.currentTime = v.duration / 2;
+  });
   v.load();
 });
 
