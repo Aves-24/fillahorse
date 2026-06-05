@@ -441,7 +441,7 @@
 </div>
 
 <!-- Look-around hint -->
-<div class="hint" id="hint">◀ Bewege dein Handy ▶</div>
+<div class="hint" id="hint">◀ Wische zum Entdecken ▶</div>
 
 <!-- Legal links (always visible in AR view) -->
 <div class="legal" id="legalAr" style="display:none;">
@@ -612,13 +612,6 @@ function markInteracted() {
   if (!interacted) { interacted = true; hint.style.opacity = '0'; }
 }
 
-// Gyroscope: tilt phone left/right
-window.addEventListener('deviceorientation', e => {
-  if (e.gamma == null) return;
-  if (navDrag || performance.now() - navLastTouch < 1500) return;
-  navTarget = clampN(e.gamma / MAXG, -1, 1) * 70;
-  if (Math.abs(navTarget) > 10) markInteracted();
-});
 
 // Pointer / touch swipe — z velocity i momentum
 let navVelocity = 0;
