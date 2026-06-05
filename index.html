@@ -366,17 +366,6 @@
 <section class="panel side left">
   <div class="side-label">★ Bestseller</div>
   <div class="products" id="leftProducts" data-cat="bestseller"></div>
-  <div class="products" id="videoThumbRow" style="margin-top:6px;">
-    <div class="video-thumb-wrap" id="videoThumb">
-      <video src="VID-20260319-WA0012.mp4" muted playsinline preload="metadata" id="videoThumbVid"></video>
-      <div class="video-play-btn">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.9)"/>
-          <polygon points="10,8 18,12 10,16" fill="#000"/>
-        </svg>
-      </div>
-    </div>
-  </div>
 </section>
 
 <!-- CENTER: Logo -->
@@ -427,6 +416,7 @@
 <section class="panel side right">
   <div class="side-label">Unsere Empfehlungen</div>
   <div class="products" id="rightProducts" data-cat="empfehlung"></div>
+  <div class="products" id="videoThumbRowRight" style="margin-top:6px;"></div>
 </section>
 
 </div><!-- /world -->
@@ -689,19 +679,30 @@ const stableBg = document.getElementById('stableBg');
   stableBg.style.transform = `translateX(${navCur * 0.25}vw)`;
 })();
 
+// ── Video thumbnails: losuj 3 z 4 filmów ──
+const ALL_VIDEOS = ['VID-20260319-WA0012.mp4', 'f1v.mp4', 'fv2.mp4', 'fv3.mp4'];
+const playIcon = `<div class="video-play-btn"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.9)"/><polygon points="10,8 18,12 10,16" fill="#000"/></svg></div>`;
+const shuffled = ALL_VIDEOS.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+document.getElementById('videoThumbRowRight').innerHTML = shuffled.map(src => `
+  <div class="video-thumb-wrap" data-video-src="${src}">
+    <video src="${src}" muted playsinline preload="metadata"></video>
+    ${playIcon}
+  </div>`).join('');
+
 // ── Video modal: miniaturka → fullscreen ──
 const videoModal  = document.getElementById('videoModal');
 const videoPlayer = document.getElementById('videoPlayer');
 const videoClose  = document.getElementById('videoClose');
-const videoThumb  = document.getElementById('videoThumb');
-const videoThumbVid = document.getElementById('videoThumbVid');
 
-// Pokaż pierwszą klatkę miniatury
-videoThumbVid.addEventListener('loadedmetadata', () => {
-  videoThumbVid.currentTime = 0.1;
+// Pokaż pierwszą klatkę wszystkich miniatur
+document.querySelectorAll('.video-thumb-wrap video').forEach(v => {
+  v.addEventListener('loadedmetadata', () => { v.currentTime = 0.1; });
 });
 
-function openVideo() {
+function openVideo(src) {
+  if (videoPlayer.src !== new URL(src, location.href).href) {
+    videoPlayer.src = src;
+  }
   videoModal.classList.add('open');
   videoPlayer.currentTime = 0;
   videoPlayer.play().catch(() => {});
@@ -712,7 +713,10 @@ function closeVideo() {
   videoPlayer.pause();
 }
 
-videoThumb.addEventListener('click', openVideo);
+document.addEventListener('click', e => {
+  const thumb = e.target.closest('.video-thumb-wrap');
+  if (thumb) openVideo(thumb.dataset.videoSrc);
+});
 videoClose.addEventListener('click', closeVideo);
 videoModal.addEventListener('click', e => {
   if (e.target === videoModal) closeVideo();
