@@ -685,19 +685,22 @@ const playIcon = `<div class="video-play-btn"><svg viewBox="0 0 24 24" fill="non
 const shuffled = ALL_VIDEOS.slice().sort(() => Math.random() - 0.5).slice(0, 3);
 document.getElementById('videoThumbRowRight').innerHTML = shuffled.map(src => `
   <div class="video-thumb-wrap" data-video-src="${src}">
-    <video src="${src}" muted playsinline preload="metadata"></video>
+    <video src="${src}" muted playsinline preload="auto"></video>
     ${playIcon}
   </div>`).join('');
+
+// Pokaż pierwszą klatkę miniatur
+document.querySelectorAll('.video-thumb-wrap video').forEach(v => {
+  function seekThumb() { v.currentTime = 0.5; }
+  v.addEventListener('loadedmetadata', seekThumb);
+  v.addEventListener('canplay', seekThumb);
+  v.load();
+});
 
 // ── Video modal: miniaturka → fullscreen ──
 const videoModal  = document.getElementById('videoModal');
 const videoPlayer = document.getElementById('videoPlayer');
 const videoClose  = document.getElementById('videoClose');
-
-// Pokaż pierwszą klatkę wszystkich miniatur
-document.querySelectorAll('.video-thumb-wrap video').forEach(v => {
-  v.addEventListener('loadedmetadata', () => { v.currentTime = 0.1; });
-});
 
 function openVideo(src) {
   if (videoPlayer.src !== new URL(src, location.href).href) {
